@@ -1,1 +1,3 @@
 My new text file
+
+Hello, This is commet after clone
