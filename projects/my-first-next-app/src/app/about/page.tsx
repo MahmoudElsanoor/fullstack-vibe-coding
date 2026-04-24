@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Home() {
+export default function AboutPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-8 px-6 py-12">
       <nav className="flex gap-4 text-sm font-medium">
@@ -10,12 +10,9 @@ export default function Home() {
       </nav>
 
       <section className="space-y-4">
-        <h1 className="text-3xl font-bold">Home Page</h1>
+        <h1 className="text-3xl font-bold">About Page</h1>
         <p className="text-base text-gray-700">
-          Welcome to Day 9 of your Next.js app. This is the home page.
-        </p>
-        <p className="text-base text-gray-700">
-          Use the links above to visit the About and Learning pages.
+          This is the About page for your Next.js practice project.
         </p>
       </section>
     </main>
