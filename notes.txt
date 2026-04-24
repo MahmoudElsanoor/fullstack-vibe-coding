@@ -1,3 +1,3 @@
 My new text file
 
-Hello, This is commit after clone
+Hello, This is comment after clone
