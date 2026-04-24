@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Header from "./Header";
 
 export default function Home() {
   const name = "Mahmoud";
@@ -11,6 +12,7 @@ export default function Home() {
       </nav>
 
       <section className="space-y-4">
+        <Header title="Home Page" />
         <h1 className="text-3xl font-bold">
   Welcome {name} — my first Next.js app 🚀
 </h1>
