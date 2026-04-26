@@ -6,7 +6,7 @@ export default function Home() {
           <div className="flex flex-col gap-10 px-8 py-12 sm:px-12 lg:flex-row lg:items-end lg:justify-between lg:px-16 lg:py-16">
             <div className="max-w-3xl">
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400">
-                Day 14 learning roadmap
+                Day 17 deployment practice
               </p>
               <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 Building my full-stack skills with Next.js, GitHub, VS Code,
