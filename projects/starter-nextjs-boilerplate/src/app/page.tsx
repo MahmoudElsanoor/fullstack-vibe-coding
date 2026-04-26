@@ -146,7 +146,7 @@ export default function Home() {
         </section>
 
         <footer className="px-2 pb-4 pt-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Day 14 Landing Page Draft • Full-Stack Roadmap Project
+          Day 19 Diff Review Practice • Full-Stack Roadmap Project
         </footer>
       </main>
     </div>
