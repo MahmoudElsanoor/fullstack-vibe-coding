@@ -139,7 +139,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Start the next step
+                Read the Next.js deployment guide
               </a>
             </div>
           </div>
