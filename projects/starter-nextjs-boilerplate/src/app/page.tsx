@@ -1,7 +1,8 @@
 'use client'
 
 import { supabase } from "@/lib/supabaseClient";
-import { FormEvent, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { FormEvent, useEffect, useState } from 'react';
 
 type Task = {
   title: string;
@@ -12,6 +13,7 @@ type Task = {
 export default function Home() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [session, setSession] = useState<Session | null>(null);
   const [authMessage, setAuthMessage] = useState('');
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
@@ -28,6 +30,31 @@ export default function Home() {
     statusFilter === 'All'
       ? tasks
       : tasks.filter((task) => task.status === statusFilter);
+
+  useEffect(() => {
+    async function loadSession() {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        setAuthError(error.message);
+        return;
+      }
+
+      setSession(data.session);
+    }
+
+    void loadSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   function resetForm() {
     setTitle('');
@@ -147,6 +174,24 @@ export default function Home() {
     );
   }
 
+  async function handleLogout() {
+    setAuthMessage('');
+    setAuthError('');
+    setIsAuthLoading(true);
+
+    const { error } = await supabase.auth.signOut();
+
+    setIsAuthLoading(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setSession(null);
+    setAuthMessage('Logged out successfully.');
+  }
+
   return (
     <div className="bg-zinc-50 px-4 py-10 font-sans text-zinc-900 dark:bg-black dark:text-zinc-50 sm:px-6 sm:py-14 lg:py-16">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 lg:gap-8">
@@ -231,6 +276,17 @@ export default function Home() {
 
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
               <div className="grid gap-4">
+                {session ? (
+                  <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      Logged in as
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                      {session.user.email}
+                    </p>
+                  </div>
+                ) : null}
+
                 <div>
                   <label
                     className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
@@ -297,6 +353,17 @@ export default function Home() {
                     {isAuthLoading ? 'Working...' : 'Log in'}
                   </button>
                 </div>
+
+                {session ? (
+                  <button
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                    disabled={isAuthLoading}
+                    onClick={() => void handleLogout()}
+                    type="button"
+                  >
+                    {isAuthLoading ? 'Working...' : 'Log out'}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
