@@ -1,5 +1,6 @@
 'use client'
 
+import { supabase } from "@/lib/supabaseClient";
 import { FormEvent, useState } from 'react';
 
 type Task = {
@@ -9,6 +10,11 @@ type Task = {
 };
 
 export default function Home() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState('To Do');
   const [priority, setPriority] = useState('Medium');
@@ -103,6 +109,44 @@ export default function Home() {
     resetForm();
   }
 
+  async function handleAuth(mode: 'signup' | 'login') {
+    setAuthMessage('');
+    setAuthError('');
+
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
+      setAuthError('Please enter both an email and password.');
+      return;
+    }
+
+    setIsAuthLoading(true);
+
+    const { error } =
+      mode === 'signup'
+        ? await supabase.auth.signUp({
+            email: trimmedEmail,
+            password,
+          })
+        : await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password,
+          });
+
+    setIsAuthLoading(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setAuthMessage(
+      mode === 'signup'
+        ? 'Sign-up successful. Check your email for the confirmation link if Supabase email confirmation is enabled.'
+        : 'Logged in successfully.',
+    );
+  }
+
   return (
     <div className="bg-zinc-50 px-4 py-10 font-sans text-zinc-900 dark:bg-black dark:text-zinc-50 sm:px-6 sm:py-14 lg:py-16">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 lg:gap-8">
@@ -163,6 +207,95 @@ export default function Home() {
                     Workflow
                   </p>
                   <p className="mt-2">Plan, build, refine</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+                Supabase auth practice
+              </p>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                Try a simple email login flow
+              </h2>
+              <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+                This small form lets me practice the basics of signing up and
+                logging in with Supabase before connecting auth to the rest of
+                the app.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+              <div className="grid gap-4">
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="authEmail"
+                  >
+                    Email
+                  </label>
+                  <input
+                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
+                    id="authEmail"
+                    name="authEmail"
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    type="email"
+                    value={email}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="authPassword"
+                  >
+                    Password
+                  </label>
+                  <input
+                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
+                    id="authPassword"
+                    name="authPassword"
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Enter your password"
+                    type="password"
+                    value={password}
+                  />
+                </div>
+
+                {authError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                    {authError}
+                  </div>
+                ) : null}
+
+                {authMessage ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    {authMessage}
+                  </div>
+                ) : null}
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                    disabled={isAuthLoading}
+                    onClick={() => void handleAuth('signup')}
+                    type="button"
+                  >
+                    {isAuthLoading ? 'Working...' : 'Sign up'}
+                  </button>
+                  <button
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                    disabled={isAuthLoading}
+                    onClick={() => void handleAuth('login')}
+                    type="button"
+                  >
+                    {isAuthLoading ? 'Working...' : 'Log in'}
+                  </button>
                 </div>
               </div>
             </div>
