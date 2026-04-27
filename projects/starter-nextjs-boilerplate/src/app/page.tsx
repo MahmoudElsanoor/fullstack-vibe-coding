@@ -42,6 +42,12 @@ export default function Home() {
   const [databaseEditStatus, setDatabaseEditStatus] = useState('To Do');
   const [databaseEditPriority, setDatabaseEditPriority] = useState('Medium');
   const [databaseTaskActionId, setDatabaseTaskActionId] = useState<number | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isFileUploading, setIsFileUploading] = useState(false);
+  const [fileUploadError, setFileUploadError] = useState('');
+  const [fileUploadMessage, setFileUploadMessage] = useState('');
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [uploadedFileUrl, setUploadedFileUrl] = useState('');
 
   const filteredTasks =
     statusFilter === 'All'
@@ -321,6 +327,44 @@ export default function Home() {
 
     setSession(null);
     setAuthMessage('Logged out successfully.');
+  }
+
+  async function handleFileUpload() {
+    if (!selectedFile) {
+      setFileUploadMessage('');
+      setUploadedFileName('');
+      setUploadedFileUrl('');
+      setFileUploadError('Please choose a file before uploading.');
+      return;
+    }
+
+    setIsFileUploading(true);
+    setFileUploadError('');
+    setFileUploadMessage('');
+    setUploadedFileName('');
+    setUploadedFileUrl('');
+
+    const filePath = `${Date.now()}-${selectedFile.name.replace(/\s+/g, '-')}`;
+
+    const { error } = await supabase.storage
+      .from('task-files')
+      .upload(filePath, selectedFile);
+
+    if (error) {
+      setFileUploadError(`Could not upload file: ${error.message}`);
+      setIsFileUploading(false);
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('task-files').getPublicUrl(filePath);
+
+    setUploadedFileName(selectedFile.name);
+    setUploadedFileUrl(publicUrl);
+    setFileUploadMessage('File uploaded successfully.');
+    setSelectedFile(null);
+    setIsFileUploading(false);
   }
 
   return (
@@ -995,6 +1039,91 @@ export default function Home() {
               )
             ) : null}
                   </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+                Day 33 storage practice
+              </p>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                Upload one file to Supabase Storage
+              </h2>
+              <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+                This section is a simple file upload exercise. It sends one
+                selected file to the <code>task-files</code> bucket without
+                connecting it to a task yet.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+              <div className="grid gap-4">
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="taskFile"
+                  >
+                    Choose one file
+                  </label>
+                  <input
+                    className="mt-2 block w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:file:bg-zinc-100 dark:file:text-zinc-900"
+                    id="taskFile"
+                    name="taskFile"
+                    onChange={(event) => {
+                      const nextFile = event.target.files?.[0] ?? null;
+
+                      setSelectedFile(nextFile);
+                      setFileUploadError('');
+                      setFileUploadMessage('');
+                      setUploadedFileName('');
+                      setUploadedFileUrl('');
+                    }}
+                    type="file"
+                  />
+                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                    {selectedFile
+                      ? `Selected file: ${selectedFile.name}`
+                      : 'No file selected yet.'}
+                  </p>
+                </div>
+
+                {fileUploadError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                    {fileUploadError}
+                  </div>
+                ) : null}
+
+                {fileUploadMessage ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <p>{fileUploadMessage}</p>
+                    <p className="mt-2">
+                      Uploaded file: <span className="font-semibold">{uploadedFileName}</span>
+                    </p>
+                    {uploadedFileUrl ? (
+                      <a
+                        className="mt-2 inline-flex break-all text-sm font-semibold text-emerald-700 underline underline-offset-4 dark:text-emerald-300"
+                        href={uploadedFileUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        {uploadedFileUrl}
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <button
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                  disabled={isFileUploading}
+                  onClick={() => void handleFileUpload()}
+                  type="button"
+                >
+                  {isFileUploading ? 'Uploading...' : 'Upload File'}
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <footer className="px-4 pb-2 pt-1 text-center text-sm leading-6 text-zinc-500 dark:text-zinc-400 sm:px-6">
