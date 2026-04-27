@@ -42,6 +42,25 @@ export default function Home() {
       ? tasks
       : tasks.filter((task) => task.status === statusFilter);
 
+  async function loadDatabaseTasks(showLoadingState = true) {
+    if (showLoadingState) {
+      setIsDatabaseTasksLoading(true);
+      setDatabaseTasksError('');
+    }
+
+    const { data, error } = await supabase.from('tasks').select('*');
+
+    if (error) {
+      setDatabaseTasksError(error.message);
+      setDatabaseTasks([]);
+      setIsDatabaseTasksLoading(false);
+      return;
+    }
+
+    setDatabaseTasks(data ?? []);
+    setIsDatabaseTasksLoading(false);
+  }
+
   useEffect(() => {
     async function loadSession() {
       const { data, error } = await supabase.auth.getSession();
@@ -68,24 +87,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    async function loadDatabaseTasks() {
-      setIsDatabaseTasksLoading(true);
-      setDatabaseTasksError('');
-
-      const { data, error } = await supabase.from('tasks').select('*');
-
-      if (error) {
-        setDatabaseTasksError(error.message);
-        setDatabaseTasks([]);
-        setIsDatabaseTasksLoading(false);
-        return;
-      }
-
-      setDatabaseTasks(data ?? []);
-      setIsDatabaseTasksLoading(false);
+    async function loadInitialDatabaseTasks() {
+      await loadDatabaseTasks(false);
     }
 
-    void loadDatabaseTasks();
+    void loadInitialDatabaseTasks();
   }, []);
 
   function resetForm() {
@@ -128,6 +134,18 @@ export default function Home() {
       return;
     }
 
+    const { error } = await supabase.from('tasks').insert({
+      title: trimmedTitle,
+      status,
+      priority,
+    });
+
+    if (error) {
+      setErrorMessage(`Could not save task to Supabase: ${error.message}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     setTasks((currentTasks) => [
       ...currentTasks,
       {
@@ -136,6 +154,8 @@ export default function Home() {
         priority,
       },
     ]);
+
+    await loadDatabaseTasks();
     setIsSubmitting(false);
     resetForm();
   }
@@ -809,7 +829,7 @@ export default function Home() {
                 </div>
               )
             ) : null}
-          </div>
+                  </div>
         </section>
 
         <footer className="px-4 pb-2 pt-1 text-center text-sm leading-6 text-zinc-500 dark:text-zinc-400 sm:px-6">
