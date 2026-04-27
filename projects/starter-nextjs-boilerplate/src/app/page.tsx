@@ -1,4 +1,108 @@
+'use client'
+
+import { FormEvent, useState } from 'react';
+
+type Task = {
+  title: string;
+  status: string;
+  priority: string;
+};
+
 export default function Home() {
+  const [title, setTitle] = useState('');
+  const [status, setStatus] = useState('To Do');
+  const [priority, setPriority] = useState('Medium');
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const filteredTasks =
+    statusFilter === 'All'
+      ? tasks
+      : tasks.filter((task) => task.status === statusFilter);
+
+  function resetForm() {
+    setTitle('');
+    setStatus('To Do');
+    setPriority('Medium');
+    setEditIndex(null);
+    setErrorMessage('');
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
+      setErrorMessage('Please enter a task title before submitting.');
+      return;
+    }
+
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    if (editIndex !== null) {
+      setTasks((currentTasks) =>
+        currentTasks.map((task, index) =>
+          index === editIndex
+            ? {
+                title: trimmedTitle,
+                status,
+                priority,
+              }
+            : task,
+        ),
+      );
+      setIsSubmitting(false);
+      resetForm();
+      return;
+    }
+
+    setTasks((currentTasks) => [
+      ...currentTasks,
+      {
+        title: trimmedTitle,
+        status,
+        priority,
+      },
+    ]);
+    setIsSubmitting(false);
+    resetForm();
+  }
+
+  function handleEditTask(index: number) {
+    const task = tasks[index];
+
+    setTitle(task.title);
+    setStatus(task.status);
+    setPriority(task.priority);
+    setEditIndex(index);
+  }
+
+  function handleDeleteTask(indexToDelete: number) {
+    setTasks((currentTasks) =>
+      currentTasks.filter((_, index) => index !== indexToDelete),
+    );
+
+    if (editIndex === indexToDelete) {
+      resetForm();
+      return;
+    }
+
+    if (editIndex !== null && indexToDelete < editIndex) {
+      setEditIndex(editIndex - 1);
+    }
+  }
+
+  function handleCancelEdit() {
+    resetForm();
+  }
+
   return (
     <div className="bg-zinc-50 px-4 py-10 font-sans text-zinc-900 dark:bg-black dark:text-zinc-50 sm:px-6 sm:py-14 lg:py-16">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 lg:gap-8">
@@ -141,6 +245,249 @@ export default function Home() {
               >
                 Read the Next.js deployment guide
               </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+              Day 27 front-end review
+            </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              Simple task app with local state
+            </h2>
+            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+              This practice section brings together create, read, update,
+              delete, filtering, and basic UI states in one small front-end
+              task app.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <form
+              className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6"
+              onSubmit={handleSubmit}
+            >
+              <div className="mb-5">
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  Task Form
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                  Add a new task or update an existing one with the same form.
+                </p>
+              </div>
+
+              <div className="grid gap-5">
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="title"
+                  >
+                    Title
+                  </label>
+                  <input
+                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
+                    id="title"
+                    name="title"
+                    onChange={(event) => {
+                      const nextTitle = event.target.value;
+
+                      setTitle(nextTitle);
+
+                      if (nextTitle.trim()) {
+                        setErrorMessage('');
+                      }
+                    }}
+                    placeholder="Enter a task title"
+                    required
+                    value={title}
+                  />
+                </div>
+
+                {errorMessage ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                    {errorMessage}
+                  </div>
+                ) : null}
+
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="status"
+                  >
+                    Status
+                  </label>
+                  <select
+                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400"
+                    id="status"
+                    name="status"
+                    onChange={(event) => setStatus(event.target.value)}
+                    value={status}
+                  >
+                    <option>To Do</option>
+                    <option>In Progress</option>
+                    <option>Done</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="priority"
+                  >
+                    Priority
+                  </label>
+                  <select
+                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400"
+                    id="priority"
+                    name="priority"
+                    onChange={(event) => setPriority(event.target.value)}
+                    value={priority}
+                  >
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                  </select>
+                </div>
+
+                <button
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting
+                    ? editIndex !== null
+                      ? 'Saving...'
+                      : 'Adding...'
+                    : editIndex !== null
+                      ? 'Save Changes'
+                      : 'Add Task'}
+                </button>
+
+                {editIndex !== null ? (
+                  <button
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                    onClick={handleCancelEdit}
+                    type="button"
+                  >
+                    Cancel Edit
+                  </button>
+                ) : null}
+              </div>
+            </form>
+
+            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                Task List
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                Review tasks, filter by status, or choose an action for a
+                specific task.
+              </p>
+
+              <div className="mt-4">
+                <label
+                  className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                  htmlFor="statusFilter"
+                >
+                  Filter by status
+                </label>
+                <select
+                  className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400"
+                  id="statusFilter"
+                  name="statusFilter"
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  value={statusFilter}
+                >
+                  <option>All</option>
+                  <option>To Do</option>
+                  <option>In Progress</option>
+                  <option>Done</option>
+                </select>
+              </div>
+
+              {filteredTasks.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    {tasks.length === 0
+                      ? 'No tasks added yet'
+                      : 'No matching tasks found'}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                    {tasks.length === 0
+                      ? 'Add your first task with the form to see it appear here.'
+                      : 'Try a different status filter to see more tasks.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 border-b border-zinc-200 px-1 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                    <p>Title</p>
+                    <p>Status</p>
+                    <p>Priority</p>
+                    <p>Actions</p>
+                  </div>
+
+                  <ul className="mt-3 grid gap-3">
+                  {filteredTasks.map((task, index) => (
+                    <li
+                      key={`${task.title}-${index}`}
+                      className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                          Title
+                        </p>
+                        <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50 sm:mt-0">
+                          {task.title}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                          Status
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                          {task.status}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                          Priority
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                          {task.priority}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                          Actions
+                        </p>
+                        <div className="mt-2 flex gap-2 sm:mt-0 sm:justify-start">
+                          <button
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                            onClick={() => handleEditTask(tasks.indexOf(task))}
+                            type="button"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-900 bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                            onClick={() => handleDeleteTask(tasks.indexOf(task))}
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </section>
