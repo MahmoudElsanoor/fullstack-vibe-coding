@@ -10,6 +10,14 @@ type Task = {
   priority: string;
 };
 
+type DatabaseTask = {
+  id: number;
+  created_at: string;
+  title: string;
+  status: string;
+  priority: string;
+};
+
 export default function Home() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,6 +33,9 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [databaseTasks, setDatabaseTasks] = useState<DatabaseTask[]>([]);
+  const [databaseTasksError, setDatabaseTasksError] = useState('');
+  const [isDatabaseTasksLoading, setIsDatabaseTasksLoading] = useState(true);
 
   const filteredTasks =
     statusFilter === 'All'
@@ -54,6 +65,27 @@ export default function Home() {
     return () => {
       subscription.unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    async function loadDatabaseTasks() {
+      setIsDatabaseTasksLoading(true);
+      setDatabaseTasksError('');
+
+      const { data, error } = await supabase.from('tasks').select('*');
+
+      if (error) {
+        setDatabaseTasksError(error.message);
+        setDatabaseTasks([]);
+        setIsDatabaseTasksLoading(false);
+        return;
+      }
+
+      setDatabaseTasks(data ?? []);
+      setIsDatabaseTasksLoading(false);
+    }
+
+    void loadDatabaseTasks();
   }, []);
 
   function resetForm() {
@@ -689,6 +721,94 @@ export default function Home() {
                 </div>
               )}
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+              Day 30 Supabase read practice
+            </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              Tasks loaded from the database
+            </h2>
+            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+              This section reads the current tasks table from Supabase on page
+              load while keeping the local task app unchanged for now.
+            </p>
+          </div>
+
+          <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+            {isDatabaseTasksLoading ? (
+              <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Loading database tasks...
+                </p>
+              </div>
+            ) : null}
+
+            {databaseTasksError ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                {databaseTasksError}
+              </div>
+            ) : null}
+
+            {!isDatabaseTasksLoading && !databaseTasksError ? (
+              databaseTasks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    No database tasks found
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                    Add rows in Supabase later when you are ready to test writes.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-1 gap-3 border-b border-zinc-200 px-1 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                    <p>Title</p>
+                    <p>Status</p>
+                    <p>Priority</p>
+                  </div>
+
+                  <ul className="mt-3 grid gap-3">
+                    {databaseTasks.map((task) => (
+                      <li
+                        key={task.id}
+                        className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-center"
+                      >
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Title
+                          </p>
+                          <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50 sm:mt-0">
+                            {task.title}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Status
+                          </p>
+                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                            {task.status}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Priority
+                          </p>
+                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                            {task.priority}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            ) : null}
           </div>
         </section>
 
