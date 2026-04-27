@@ -36,6 +36,12 @@ export default function Home() {
   const [databaseTasks, setDatabaseTasks] = useState<DatabaseTask[]>([]);
   const [databaseTasksError, setDatabaseTasksError] = useState('');
   const [isDatabaseTasksLoading, setIsDatabaseTasksLoading] = useState(true);
+  const [databaseTaskMessage, setDatabaseTaskMessage] = useState('');
+  const [editingDatabaseTaskId, setEditingDatabaseTaskId] = useState<number | null>(null);
+  const [databaseEditTitle, setDatabaseEditTitle] = useState('');
+  const [databaseEditStatus, setDatabaseEditStatus] = useState('To Do');
+  const [databaseEditPriority, setDatabaseEditPriority] = useState('Medium');
+  const [databaseTaskActionId, setDatabaseTaskActionId] = useState<number | null>(null);
 
   const filteredTasks =
     statusFilter === 'All'
@@ -186,6 +192,79 @@ export default function Home() {
 
   function handleCancelEdit() {
     resetForm();
+  }
+
+  function handleStartDatabaseTaskEdit(task: DatabaseTask) {
+    setDatabaseTaskMessage('');
+    setDatabaseTasksError('');
+    setEditingDatabaseTaskId(task.id);
+    setDatabaseEditTitle(task.title);
+    setDatabaseEditStatus(task.status);
+    setDatabaseEditPriority(task.priority);
+  }
+
+  function handleCancelDatabaseTaskEdit() {
+    setEditingDatabaseTaskId(null);
+    setDatabaseEditTitle('');
+    setDatabaseEditStatus('To Do');
+    setDatabaseEditPriority('Medium');
+    setDatabaseTasksError('');
+  }
+
+  async function handleUpdateDatabaseTask(taskId: number) {
+    const trimmedTitle = databaseEditTitle.trim();
+
+    if (!trimmedTitle) {
+      setDatabaseTaskMessage('');
+      setDatabaseTasksError('Please enter a task title before saving changes.');
+      return;
+    }
+
+    setDatabaseTaskActionId(taskId);
+    setDatabaseTaskMessage('');
+    setDatabaseTasksError('');
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        title: trimmedTitle,
+        status: databaseEditStatus,
+        priority: databaseEditPriority,
+      })
+      .eq('id', taskId);
+
+    if (error) {
+      setDatabaseTasksError(`Could not update task in Supabase: ${error.message}`);
+      setDatabaseTaskActionId(null);
+      return;
+    }
+
+    await loadDatabaseTasks();
+    setDatabaseTaskMessage('Database task updated successfully.');
+    setDatabaseTaskActionId(null);
+    handleCancelDatabaseTaskEdit();
+  }
+
+  async function handleDeleteDatabaseTask(taskId: number) {
+    setDatabaseTaskActionId(taskId);
+    setDatabaseTaskMessage('');
+    setDatabaseTasksError('');
+
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+
+    if (error) {
+      setDatabaseTasksError(`Could not delete task from Supabase: ${error.message}`);
+      setDatabaseTaskActionId(null);
+      return;
+    }
+
+    await loadDatabaseTasks();
+    setDatabaseTaskMessage('Database task deleted successfully.');
+    setDatabaseTaskActionId(null);
+
+    if (editingDatabaseTaskId === taskId) {
+      handleCancelDatabaseTaskEdit();
+    }
   }
 
   async function handleAuth(mode: 'signup' | 'login') {
@@ -773,6 +852,12 @@ export default function Home() {
               </div>
             ) : null}
 
+            {databaseTaskMessage ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                {databaseTaskMessage}
+              </div>
+            ) : null}
+
             {!isDatabaseTasksLoading && !databaseTasksError ? (
               databaseTasks.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950">
@@ -785,43 +870,123 @@ export default function Home() {
                 </div>
               ) : (
                 <div>
-                  <div className="grid grid-cols-1 gap-3 border-b border-zinc-200 px-1 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                  <div className="grid grid-cols-1 gap-3 border-b border-zinc-200 px-1 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                     <p>Title</p>
                     <p>Status</p>
                     <p>Priority</p>
+                    <p>Actions</p>
                   </div>
 
                   <ul className="mt-3 grid gap-3">
                     {databaseTasks.map((task) => (
                       <li
                         key={task.id}
-                        className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-center"
+                        className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
                       >
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
                             Title
                           </p>
-                          <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50 sm:mt-0">
-                            {task.title}
-                          </p>
+                          {editingDatabaseTaskId === task.id ? (
+                            <input
+                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
+                              onChange={(event) => setDatabaseEditTitle(event.target.value)}
+                              value={databaseEditTitle}
+                            />
+                          ) : (
+                            <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50 sm:mt-0">
+                              {task.title}
+                            </p>
+                          )}
                         </div>
 
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
                             Status
                           </p>
-                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
-                            {task.status}
-                          </p>
+                          {editingDatabaseTaskId === task.id ? (
+                            <select
+                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
+                              onChange={(event) => setDatabaseEditStatus(event.target.value)}
+                              value={databaseEditStatus}
+                            >
+                              <option>To Do</option>
+                              <option>In Progress</option>
+                              <option>Done</option>
+                            </select>
+                          ) : (
+                            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                              {task.status}
+                            </p>
+                          )}
                         </div>
 
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
                             Priority
                           </p>
-                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
-                            {task.priority}
+                          {editingDatabaseTaskId === task.id ? (
+                            <select
+                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
+                              onChange={(event) => setDatabaseEditPriority(event.target.value)}
+                              value={databaseEditPriority}
+                            >
+                              <option>Low</option>
+                              <option>Medium</option>
+                              <option>High</option>
+                            </select>
+                          ) : (
+                            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                              {task.priority}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Actions
                           </p>
+                          <div className="mt-2 flex flex-wrap gap-2 sm:mt-0">
+                            {editingDatabaseTaskId === task.id ? (
+                              <>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={() => void handleUpdateDatabaseTask(task.id)}
+                                  type="button"
+                                >
+                                  {databaseTaskActionId === task.id ? 'Saving...' : 'Save'}
+                                </button>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={handleCancelDatabaseTaskEdit}
+                                  type="button"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={() => handleStartDatabaseTaskEdit(task)}
+                                  type="button"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-900 bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={() => void handleDeleteDatabaseTask(task.id)}
+                                  type="button"
+                                >
+                                  {databaseTaskActionId === task.id ? 'Deleting...' : 'Delete'}
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </li>
                     ))}
