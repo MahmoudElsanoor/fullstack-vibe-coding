@@ -31,6 +31,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
+  const [databaseStatusFilter, setDatabaseStatusFilter] = useState('All');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [databaseTasks, setDatabaseTasks] = useState<DatabaseTask[]>([]);
@@ -53,6 +54,21 @@ export default function Home() {
     statusFilter === 'All'
       ? tasks
       : tasks.filter((task) => task.status === statusFilter);
+
+  const filteredDatabaseTasks =
+    databaseStatusFilter === 'All'
+      ? databaseTasks
+      : databaseTasks.filter((task) => task.status === databaseStatusFilter);
+
+  function formatFileSize(fileSizeInBytes: number) {
+    const fileSizeInKb = fileSizeInBytes / 1024;
+
+    if (fileSizeInKb < 1024) {
+      return `${fileSizeInKb.toFixed(1)} KB`;
+    }
+
+    return `${(fileSizeInKb / 1024).toFixed(2)} MB`;
+  }
 
   async function loadDatabaseTasks(showLoadingState = true) {
     if (showLoadingState) {
@@ -374,16 +390,15 @@ export default function Home() {
           <div className="flex flex-col gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:flex-row lg:items-end lg:justify-between lg:gap-12 lg:px-12 lg:py-14">
             <div className="max-w-3xl lg:flex-1">
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400">
-                Day 17 deployment practice
+                Deployed portfolio app
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Building my full-stack skills with Next.js, GitHub, VS Code,
-                and AI tools.
+                A task management app built with Next.js and Supabase.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300 sm:mt-6 sm:text-lg sm:leading-8">
-                This landing page is part of my hands-on learning journey. I am
-                practicing how to turn a starter project into something that
-                feels clear, modern, and real one step at a time.
+                This deployed project brings together Supabase Auth, Database,
+                and Storage in one small full-stack app designed to feel clear,
+                practical, and portfolio-ready.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <a
@@ -411,8 +426,8 @@ export default function Home() {
                   Current focus
                 </p>
                 <p className="mt-2 text-base leading-7 text-zinc-700 dark:text-zinc-200">
-                  Turning a simple homepage into a polished landing page without
-                  adding extra complexity.
+                  Polishing the production experience while keeping the working
+                  Supabase foundations stable.
                 </p>
               </div>
               <div className="grid gap-3 text-sm text-zinc-600 dark:text-zinc-300 sm:grid-cols-2">
@@ -420,13 +435,13 @@ export default function Home() {
                   <p className="font-semibold text-zinc-900 dark:text-zinc-50">
                     Stack
                   </p>
-                  <p className="mt-2">Next.js + Tailwind</p>
+                  <p className="mt-2">Next.js + Supabase</p>
                 </div>
                 <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
                   <p className="font-semibold text-zinc-900 dark:text-zinc-50">
-                    Workflow
+                    Features
                   </p>
-                  <p className="mt-2">Plan, build, refine</p>
+                  <p className="mt-2">Auth, tasks, uploads</p>
                 </div>
               </div>
             </div>
@@ -437,66 +452,70 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-                Supabase auth practice
+                Account access
               </p>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                Try a simple email login flow
+                Sign in to manage your task workspace
               </h2>
               <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-                This small form lets me practice the basics of signing up and
-                logging in with Supabase before connecting auth to the rest of
-                the app.
+                Use your email account to sign up, log in, and continue working
+                with your tasks and uploads in one place.
               </p>
             </div>
 
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
               <div className="grid gap-4">
                 {session ? (
-                  <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
+                  <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-4 dark:border-zinc-700 dark:bg-zinc-950">
                     <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                      Logged in as
+                      You are logged in
                     </p>
-                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                    <p className="mt-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
                       {session.user.email}
                     </p>
+                    <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                      You can now manage tasks and upload files.
+                    </p>
                   </div>
-                ) : null}
+                ) : (
+                  <>
+                    <div>
+                      <label
+                        className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                        htmlFor="authEmail"
+                      >
+                        Email
+                      </label>
+                      <input
+                        className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
+                        id="authEmail"
+                        name="authEmail"
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        type="email"
+                        value={email}
+                      />
+                    </div>
 
-                <div>
-                  <label
-                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
-                    htmlFor="authEmail"
-                  >
-                    Email
-                  </label>
-                  <input
-                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
-                    id="authEmail"
-                    name="authEmail"
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    type="email"
-                    value={email}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
-                    htmlFor="authPassword"
-                  >
-                    Password
-                  </label>
-                  <input
-                    className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
-                    id="authPassword"
-                    name="authPassword"
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Enter your password"
-                    type="password"
-                    value={password}
-                  />
-                </div>
+                    <div>
+                      <label
+                        className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                        htmlFor="authPassword"
+                      >
+                        Password
+                      </label>
+                      <input
+                        className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400"
+                        id="authPassword"
+                        name="authPassword"
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Enter your password"
+                        type="password"
+                        value={password}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {authError ? (
                   <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
@@ -510,24 +529,26 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <button
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-                    disabled={isAuthLoading}
-                    onClick={() => void handleAuth('signup')}
-                    type="button"
-                  >
-                    {isAuthLoading ? 'Working...' : 'Sign up'}
-                  </button>
-                  <button
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
-                    disabled={isAuthLoading}
-                    onClick={() => void handleAuth('login')}
-                    type="button"
-                  >
-                    {isAuthLoading ? 'Working...' : 'Log in'}
-                  </button>
-                </div>
+                {!session ? (
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                      disabled={isAuthLoading}
+                      onClick={() => void handleAuth('signup')}
+                      type="button"
+                    >
+                      {isAuthLoading ? 'Working...' : 'Sign up'}
+                    </button>
+                    <button
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                      disabled={isAuthLoading}
+                      onClick={() => void handleAuth('login')}
+                      type="button"
+                    >
+                      {isAuthLoading ? 'Working...' : 'Log in'}
+                    </button>
+                  </div>
+                ) : null}
 
                 {session ? (
                   <button
@@ -547,79 +568,376 @@ export default function Home() {
         <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-              Features
+              App overview
             </p>
             <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              A learning workflow built around steady progress.
+              One app, powered by the core Supabase building blocks.
             </h2>
             <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              Each section of this project reflects how I am approaching
-              full-stack development: learning by doing, using tools
-              thoughtfully, and keeping visible progress as I go.
+              The goal of this project is to show a coherent task management
+              flow with authentication, live database tasks, and file uploads
+              working together in a single deployed experience.
             </p>
           </div>
 
           <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-6 md:grid-cols-3">
             <article className="flex h-full flex-col rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
-                Learn by Building
+                Auth
               </p>
-              <h3 className="mt-4 text-xl font-semibold">Small projects, real practice</h3>
+              <h3 className="mt-4 text-xl font-semibold">Secure account access</h3>
               <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-                I am learning faster by turning each roadmap day into something
-                tangible, from starter pages to more complete UI sections.
+                Users can sign up, log in, and log out with Supabase Auth so
+                the app has a real account flow instead of a static demo.
               </p>
             </article>
 
             <article className="flex h-full flex-col rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
-                AI-Assisted Workflow
+                Database
               </p>
-              <h3 className="mt-4 text-xl font-semibold">Plan first, then build with support</h3>
+              <h3 className="mt-4 text-xl font-semibold">Live task management</h3>
               <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-                I use AI coding tools to clarify steps, speed up iteration, and
-                stay focused while still understanding what I am building.
+                Tasks are created, updated, filtered, and deleted through
+                Supabase Database so the main workflow stays connected to live
+                data.
               </p>
             </article>
 
             <article className="flex h-full flex-col rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
-                GitHub Progress
+                Storage
               </p>
-              <h3 className="mt-4 text-xl font-semibold">Visible improvement over time</h3>
+              <h3 className="mt-4 text-xl font-semibold">Simple file uploads</h3>
               <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-                Each commit helps document what I learned, what changed, and how
-                this full-stack journey is growing week by week.
+                Files can be uploaded to the <code>task-files</code> bucket in
+                Supabase Storage, giving the app a practical upload workflow.
               </p>
             </article>
           </div>
         </section>
 
-        <section className="rounded-[2rem] bg-zinc-900 px-5 py-8 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+              Task workspace
+            </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              Manage your live Supabase tasks
+            </h2>
+            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+              This is the main task area for the app. Review live tasks from
+              Supabase, filter by status, and update or delete items without
+              leaving the page.
+            </p>
+          </div>
+
+          <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+            {isDatabaseTasksLoading ? (
+              <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Loading database tasks...
+                </p>
+              </div>
+            ) : null}
+
+            {databaseTasksError ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                {databaseTasksError}
+              </div>
+            ) : null}
+
+            {databaseTaskMessage ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                {databaseTaskMessage}
+              </div>
+            ) : null}
+
+            {!isDatabaseTasksLoading && !databaseTasksError ? (
+              databaseTasks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    No tasks yet. Create your first task.
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                    Add a task with the form above to see it appear here.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="mb-4 flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="w-full sm:max-w-xs">
+                      <label
+                        className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                        htmlFor="databaseStatusFilter"
+                      >
+                        Filter live tasks by status
+                      </label>
+                      <select
+                        className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400"
+                        id="databaseStatusFilter"
+                        name="databaseStatusFilter"
+                        onChange={(event) => setDatabaseStatusFilter(event.target.value)}
+                        value={databaseStatusFilter}
+                      >
+                        <option>All</option>
+                        <option>To Do</option>
+                        <option>In Progress</option>
+                        <option>Done</option>
+                      </select>
+                    </div>
+
+                    <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+                      {filteredDatabaseTasks.length > 0
+                        ? `${filteredDatabaseTasks.length} tasks shown`
+                        : 'No tasks shown'}
+                    </p>
+                  </div>
+
+                  {filteredDatabaseTasks.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                        No tasks match this filter.
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                        Try a different status to see more live tasks.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                  <div className="grid grid-cols-1 gap-3 border-b border-zinc-200 px-1 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                    <p>Title</p>
+                    <p>Status</p>
+                    <p>Priority</p>
+                    <p>Actions</p>
+                  </div>
+
+                  <ul className="mt-3 grid gap-3">
+                    {filteredDatabaseTasks.map((task) => (
+                      <li
+                        key={task.id}
+                        className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
+                      >
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Title
+                          </p>
+                          {editingDatabaseTaskId === task.id ? (
+                            <input
+                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
+                              onChange={(event) => setDatabaseEditTitle(event.target.value)}
+                              value={databaseEditTitle}
+                            />
+                          ) : (
+                            <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50 sm:mt-0">
+                              {task.title}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Status
+                          </p>
+                          {editingDatabaseTaskId === task.id ? (
+                            <select
+                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
+                              onChange={(event) => setDatabaseEditStatus(event.target.value)}
+                              value={databaseEditStatus}
+                            >
+                              <option>To Do</option>
+                              <option>In Progress</option>
+                              <option>Done</option>
+                            </select>
+                          ) : (
+                            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                              {task.status}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Priority
+                          </p>
+                          {editingDatabaseTaskId === task.id ? (
+                            <select
+                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
+                              onChange={(event) => setDatabaseEditPriority(event.target.value)}
+                              value={databaseEditPriority}
+                            >
+                              <option>Low</option>
+                              <option>Medium</option>
+                              <option>High</option>
+                            </select>
+                          ) : (
+                            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
+                              {task.priority}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            Actions
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2 sm:mt-0">
+                            {editingDatabaseTaskId === task.id ? (
+                              <>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={() => void handleUpdateDatabaseTask(task.id)}
+                                  type="button"
+                                >
+                                  {databaseTaskActionId === task.id ? 'Saving...' : 'Save task changes'}
+                                </button>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={handleCancelDatabaseTaskEdit}
+                                  type="button"
+                                >
+                                  Cancel editing
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={() => handleStartDatabaseTaskEdit(task)}
+                                  type="button"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-900 bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                                  disabled={databaseTaskActionId === task.id}
+                                  onClick={() => void handleDeleteDatabaseTask(task.id)}
+                                  type="button"
+                                >
+                                  {databaseTaskActionId === task.id ? 'Deleting...' : 'Delete'}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                  )}
+                </div>
+              )
+            ) : null}
+                  </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 dark:text-zinc-600">
-                Keep going
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+                File uploads
               </p>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                One polished page at a time is still real progress.
+                Upload a file to Supabase Storage
               </h2>
-              <p className="mt-4 text-base leading-7 text-zinc-300 dark:text-zinc-700">
-                The goal is not to build everything at once. The goal is to keep
-                shipping small improvements and keep moving forward through the
-                roadmap.
+              <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+                This upload area lets you send a single file to Supabase
+                Storage and confirm that the hosted file is available after the
+                upload completes.
               </p>
             </div>
 
-            <div className="w-full lg:w-auto">
-              <a
-                className="inline-flex h-12 w-full items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-700 sm:w-auto"
-                href="https://vercel.com/docs/frameworks/nextjs"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Read the Next.js deployment guide
-              </a>
+            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+              <div className="grid gap-4">
+                <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm leading-6 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                  <p>One file can be selected at a time.</p>
+                  <p className="mt-2">
+                    The file uploads to the Supabase Storage bucket named <code>task-files</code>.
+                  </p>
+                  <p className="mt-2">
+                    For now, uploaded files are not attached to a specific task yet.
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    htmlFor="taskFile"
+                  >
+                    Choose or replace your file
+                  </label>
+                  <input
+                    className="mt-2 block w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:file:bg-zinc-100 dark:file:text-zinc-900"
+                    id="taskFile"
+                    name="taskFile"
+                    onChange={(event) => {
+                      const nextFile = event.target.files?.[0] ?? null;
+
+                      setSelectedFile(nextFile);
+                      setFileUploadError('');
+                      setFileUploadMessage('');
+                      setUploadedFileName('');
+                      setUploadedFileUrl('');
+                    }}
+                    type="file"
+                  />
+
+                  {selectedFile ? (
+                    <div className="mt-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                        Selected file
+                      </p>
+                      <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">
+                        {selectedFile.name}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                        Size: {formatFileSize(selectedFile.size)}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                      No file selected yet. Choose a file to upload or replace your current selection.
+                    </p>
+                  )}
+                </div>
+
+                {fileUploadError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                    {fileUploadError}
+                  </div>
+                ) : null}
+
+                {fileUploadMessage ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <p>{fileUploadMessage}</p>
+                    <p className="mt-2">
+                      Uploaded file: <span className="font-semibold">{uploadedFileName}</span>
+                    </p>
+                    {uploadedFileUrl ? (
+                      <a
+                        className="mt-3 inline-flex text-sm font-semibold text-emerald-700 underline underline-offset-4 dark:text-emerald-300"
+                        href={uploadedFileUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Open uploaded file
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <button
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                  disabled={isFileUploading}
+                  onClick={() => void handleFileUpload()}
+                  type="button"
+                >
+                  {isFileUploading ? 'Uploading...' : 'Upload File'}
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -627,15 +945,15 @@ export default function Home() {
         <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-              Day 27 front-end review
+              UI sandbox
             </p>
             <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              Simple task app with local state
+              Supporting front-end patterns used while building the app
             </h2>
             <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              This practice section brings together create, read, update,
-              delete, filtering, and basic UI states in one small front-end
-              task app.
+              This supporting section keeps a small local-state task interface
+              on the page as part of the development journey, while the live
+              Supabase task workspace above remains the main product flow.
             </p>
           </div>
 
@@ -646,10 +964,10 @@ export default function Home() {
             >
               <div className="mb-5">
                 <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                  Task Form
+                  Local Task Form
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                  Add a new task or update an existing one with the same form.
+                  Add a new local task or update an existing one using the same form.
                 </p>
               </div>
 
@@ -754,11 +1072,10 @@ export default function Home() {
 
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                Task List
+                Local Task List
               </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                Review tasks, filter by status, or choose an action for a
-                specific task.
+                Review local tasks, filter by status, or choose an action for a specific task.
               </p>
 
               <div className="mt-4">
@@ -867,269 +1184,39 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-              Day 30 Supabase read practice
-            </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              Tasks loaded from the database
-            </h2>
-            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              This section reads the current tasks table from Supabase on page
-              load while keeping the local task app unchanged for now.
-            </p>
-          </div>
-
-          <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
-            {isDatabaseTasksLoading ? (
-              <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  Loading database tasks...
-                </p>
-              </div>
-            ) : null}
-
-            {databaseTasksError ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
-                {databaseTasksError}
-              </div>
-            ) : null}
-
-            {databaseTaskMessage ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
-                {databaseTaskMessage}
-              </div>
-            ) : null}
-
-            {!isDatabaseTasksLoading && !databaseTasksError ? (
-              databaseTasks.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                    No database tasks found
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    Add rows in Supabase later when you are ready to test writes.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <div className="grid grid-cols-1 gap-3 border-b border-zinc-200 px-1 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
-                    <p>Title</p>
-                    <p>Status</p>
-                    <p>Priority</p>
-                    <p>Actions</p>
-                  </div>
-
-                  <ul className="mt-3 grid gap-3">
-                    {databaseTasks.map((task) => (
-                      <li
-                        key={task.id}
-                        className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
-                      >
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
-                            Title
-                          </p>
-                          {editingDatabaseTaskId === task.id ? (
-                            <input
-                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
-                              onChange={(event) => setDatabaseEditTitle(event.target.value)}
-                              value={databaseEditTitle}
-                            />
-                          ) : (
-                            <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50 sm:mt-0">
-                              {task.title}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
-                            Status
-                          </p>
-                          {editingDatabaseTaskId === task.id ? (
-                            <select
-                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
-                              onChange={(event) => setDatabaseEditStatus(event.target.value)}
-                              value={databaseEditStatus}
-                            >
-                              <option>To Do</option>
-                              <option>In Progress</option>
-                              <option>Done</option>
-                            </select>
-                          ) : (
-                            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
-                              {task.status}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
-                            Priority
-                          </p>
-                          {editingDatabaseTaskId === task.id ? (
-                            <select
-                              className="mt-2 h-11 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-400 sm:mt-0"
-                              onChange={(event) => setDatabaseEditPriority(event.target.value)}
-                              value={databaseEditPriority}
-                            >
-                              <option>Low</option>
-                              <option>Medium</option>
-                              <option>High</option>
-                            </select>
-                          ) : (
-                            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300 sm:mt-0">
-                              {task.priority}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 sm:hidden">
-                            Actions
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-2 sm:mt-0">
-                            {editingDatabaseTaskId === task.id ? (
-                              <>
-                                <button
-                                  className="inline-flex h-9 items-center justify-center rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-                                  disabled={databaseTaskActionId === task.id}
-                                  onClick={() => void handleUpdateDatabaseTask(task.id)}
-                                  type="button"
-                                >
-                                  {databaseTaskActionId === task.id ? 'Saving...' : 'Save'}
-                                </button>
-                                <button
-                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
-                                  disabled={databaseTaskActionId === task.id}
-                                  onClick={handleCancelDatabaseTaskEdit}
-                                  type="button"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
-                                  disabled={databaseTaskActionId === task.id}
-                                  onClick={() => handleStartDatabaseTaskEdit(task)}
-                                  type="button"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-900 bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-                                  disabled={databaseTaskActionId === task.id}
-                                  onClick={() => void handleDeleteDatabaseTask(task.id)}
-                                  type="button"
-                                >
-                                  {databaseTaskActionId === task.id ? 'Deleting...' : 'Delete'}
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )
-            ) : null}
-                  </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-zinc-200 bg-white px-5 py-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+        <section className="rounded-[2rem] bg-zinc-900 px-5 py-8 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-                Day 33 storage practice
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 dark:text-zinc-600">
+                Project direction
               </p>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                Upload one file to Supabase Storage
+                A small full-stack app can still show clear product thinking.
               </h2>
-              <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-                This section is a simple file upload exercise. It sends one
-                selected file to the <code>task-files</code> bucket without
-                connecting it to a task yet.
+              <p className="mt-4 text-base leading-7 text-zinc-300 dark:text-zinc-700">
+                This project focuses on making a simple task management app feel
+                more coherent, usable, and presentation-ready without adding
+                unnecessary complexity.
               </p>
             </div>
 
-            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
-              <div className="grid gap-4">
-                <div>
-                  <label
-                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
-                    htmlFor="taskFile"
-                  >
-                    Choose one file
-                  </label>
-                  <input
-                    className="mt-2 block w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:file:bg-zinc-100 dark:file:text-zinc-900"
-                    id="taskFile"
-                    name="taskFile"
-                    onChange={(event) => {
-                      const nextFile = event.target.files?.[0] ?? null;
-
-                      setSelectedFile(nextFile);
-                      setFileUploadError('');
-                      setFileUploadMessage('');
-                      setUploadedFileName('');
-                      setUploadedFileUrl('');
-                    }}
-                    type="file"
-                  />
-                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                    {selectedFile
-                      ? `Selected file: ${selectedFile.name}`
-                      : 'No file selected yet.'}
-                  </p>
-                </div>
-
-                {fileUploadError ? (
-                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
-                    {fileUploadError}
-                  </div>
-                ) : null}
-
-                {fileUploadMessage ? (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <p>{fileUploadMessage}</p>
-                    <p className="mt-2">
-                      Uploaded file: <span className="font-semibold">{uploadedFileName}</span>
-                    </p>
-                    {uploadedFileUrl ? (
-                      <a
-                        className="mt-2 inline-flex break-all text-sm font-semibold text-emerald-700 underline underline-offset-4 dark:text-emerald-300"
-                        href={uploadedFileUrl}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        {uploadedFileUrl}
-                      </a>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                <button
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-                  disabled={isFileUploading}
-                  onClick={() => void handleFileUpload()}
-                  type="button"
-                >
-                  {isFileUploading ? 'Uploading...' : 'Upload File'}
-                </button>
-              </div>
+            <div className="w-full lg:w-auto">
+              <a
+                className="inline-flex h-12 w-full items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-700 sm:w-auto"
+                href="https://vercel.com/docs/frameworks/nextjs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Read the Next.js deployment guide
+              </a>
             </div>
           </div>
         </section>
 
         <footer className="px-4 pb-2 pt-1 text-center text-sm leading-6 text-zinc-500 dark:text-zinc-400 sm:px-6">
-          <p>Day 19 Diff Review Practice</p>
+          <p>Deployed task management app</p>
           <p className="text-zinc-400 dark:text-zinc-500">
-            Full-Stack Roadmap Project
+            Next.js + Supabase portfolio project
           </p>
         </footer>
       </main>
